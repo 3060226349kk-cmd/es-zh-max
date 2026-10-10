@@ -26,9 +26,11 @@ es-zh-max 是一个翻译 skill，Claude Code、DeepSeek Harness 等支持 Agent
 |---|---|---|
 | 小 | 聊天里几句、一段 | 只读 SKILL.md，在回复里直接给对照 |
 | 中 | 一篇文档 | 加读速查表；西译中再读操作手册，中译西再读错误表和相关章节 |
-| 大 | 整本书 | 另建项目目录，配翻译计划和术语表，逐章翻译 |
+| 大 | 整本书 | 另建项目目录，配翻译计划和术语表，逐章翻译，按章分会话 |
 
 流程是：定性 → 理解（三读原文）→ 初译 → 校核（对照原文、脱离原文通读、回译抽检）→ 定稿（机检）。
+
+**大档分会话**：整本书在一个会话里译到底，上下文会越滚越大。每章收尾跑 `scripts/handoff.py meter`，Claude Code 里达到 15 万 token（其他 agent 每 2 章）就交接：在项目目录写 `HANDOFF.md`，续接命令复制到剪贴板，新窗口粘贴（如 `/es-zh-max 续译 <项目目录>`）接着译。说「自动接力」时，主会话逐章派新的子代理续译。细则见 [handoff.md](handoff.md)。
 
 ## 安装
 ```bash
@@ -56,9 +58,11 @@ es-zh-max/
 ├── cheatsheet.md         # 一页速查
 ├── glossary.md           # 中西术语对照
 ├── register-variety.md   # 西班牙与拉美用词差异、称谓、口语与粗话的语域对照
+├── handoff.md            # 大档分会话：交接、续接、自动接力（三个翻译 skill 共用）
 ├── chapters/             # 原书七章逐章提炼（13 个文件，附原书页码和「西译中反推」）
 └── scripts/
     ├── check.py               # 机检：标点残留 + 翻译腔信号；--pairs es2zh.md 查语义假朋友
+    ├── handoff.py             # 大档分会话：量上下文、写 HANDOFF.md
     └── bilingual-to-pdf.py    # 对照 MD → HTML + PDF
 ```
 
@@ -77,5 +81,6 @@ es-zh-max is a Spanish↔Chinese translation skill for agents that support Agent
   - General practice from outside the book is tagged separately.
 - **Tiers**: work is sized in three tiers (snippet, document, book).
 - **Check script**: `scripts/check.py zh|es <file> --fix` fixes punctuation and reports translationese signals. `--pairs es2zh.md` flags Spanish false friends such as *actual* → 实际 or *billón* → 十亿.
+- **Long jobs**: book projects are split across sessions. After each chapter, `scripts/handoff.py meter` reads the session's real context size (Claude Code) and calls for a handoff at 150k tokens; other agents hand off every two chapters. `handoff.py write` saves `HANDOFF.md` in the project folder and copies the resume command to the clipboard. Say 「自动接力」 to have the main session relay chapters through fresh subagents.
 
 MIT licensed. Example sentences quoted from the book are used for commentary only.
